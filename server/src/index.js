@@ -58,25 +58,40 @@ app.post("/register", async (req, res) => {
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
-  const result = await db.query(
-    "SELECT id, password_hash FROM users WHERE email = $1",
-    [email],
-  );
-
-  if (result.rows.length === 0) {
-    return res.status(401).json({ error: "invalid credentials" });
+  try {
+    const result = await db.query(
+      "SELECT password_hash FROM users WHERE email=$1",
+      [email],
+    );
+    if (result.rows.length >= 1) {
+      var validPasssowrd = bcrypt.compare(
+        password,
+        result.rows[0].password_hash,
+      );
+      if (validPasssowrd) {
+        var token = jwt.sign(email, JWT_SECRET, { expiresIn: "15m" });
+        return res.status(200).json({
+          token: token,
+          message: "Login successful",
+        });
+      } else {
+        return res.status(400).json({
+          error: "INCORRECT_PASSWORD",
+          message: "Incorrect password",
+        });
+      }
+    } else {
+      return res.status(400).json({
+        error: "USER_NOT_FOUND",
+        message: "User does not exist",
+      });
+    }
+  } catch (err) {
+    return res.status(400).json({
+      error: "USER_NOT_FOUND",
+      message: "User does not exist",
+    });
   }
-
-  const user = result.rows[0];
-  const valid = await bcrypt.compare(password, user.password_hash);
-
-  if (!valid) {
-    return res.status(401).json({ error: "Invalid credentials" });
-  }
-
-  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "15m" });
-
-  res.json({ token });
 });
 
 app.post("/teams/:teamId/projects", async (req, res) => {
