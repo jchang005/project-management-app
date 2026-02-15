@@ -60,7 +60,7 @@ app.post("/login", async (req, res) => {
 
   try {
     const result = await db.query(
-      "SELECT id, password_hash FROM users WHERE email=$1",
+      "SELECT id, pword FROM users WHERE email=$1",
       [email],
     );
 
@@ -71,7 +71,7 @@ app.post("/login", async (req, res) => {
       });
     }
 
-    var validPasssowrd = bcrypt.compare(password, result.rows[0].password_hash);
+    var validPasssowrd = bcrypt.compare(password, result.rows[0].pword);
     if (!validPasssowrd) {
       return res.status(400).json({
         error: "INCORRECT_PASSWORD",
@@ -79,16 +79,14 @@ app.post("/login", async (req, res) => {
       });
     }
 
-    var token = jwt.sign({ userId: result.rows[0].id, email }, JWT_SECRET, {
-      expiresIn: "15m",
-    });
+    var token = jwt.sign({ userId: result.rows[0].id, email }, JWT_SECRET);
     return res.status(200).json({
       token: token,
       message: "Login successful",
     });
   } catch (err) {
-    return res.status(400).json({
-      error: "SERVER_ERROR",
+    return res.status(500).json({
+      error: err.message,
       message: "Something went wrong",
     });
   }
@@ -96,7 +94,48 @@ app.post("/login", async (req, res) => {
 
 app.use(authenticate);
 
-app.post("/teams/:teamId/projects", async (req, res) => {});
+app.post("/createteam", async (req, res) => {
+  // check if team exists
+  // insert into teams table
+  // set user as owner of team
+
+  const { userId, email } = req.user;
+  const { teamName } = req.body;
+
+  try {
+    const result = await db.query(
+      "SELECT team_id FROM teams WHERE team_name=$1",
+      [teamName],
+    );
+
+    if (result.rows.length === 0) {
+      // Create team
+      await db.query(
+        "INSERT INTO teams (team_name, team_owner) values ($1, $2)",
+        [teamName, email],
+      );
+      // Get teamID that was just generated
+      const teamId = await db.query(
+        "SELECT team_id FROM teams WHERE team_name = $1",
+        [teamName],
+      );
+      // Set "OWNER" role
+      await db.query(
+        "INSERT INTO users_teams (user_id, team_id, team_role) values ($1, $2, $3)",
+        [userId, teamId.rows[0].team_id, "OWNER"],
+      );
+
+      return res.status(200).json({ message: "Team successfully created!" });
+    } else {
+      return res.status(400).json({ message: "team already exists" });
+    }
+  } catch (err) {
+    return res.status(500).json({
+      error: err.messasge,
+      message: "Something went wrong",
+    });
+  }
+});
 
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
@@ -108,6 +147,8 @@ function authenticate(req, res, next) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
+    console.log("ure a wizard harry");
+
     next();
   } catch (err) {
     return res.status(401).json({ error: "Invalid or expired token" });
