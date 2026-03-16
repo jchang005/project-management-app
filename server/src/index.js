@@ -3,10 +3,16 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import pg from "pg";
+import cors from "cors";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+  }),
+);
 
 const { DATABASE_URL, JWT_SECRET, PORT } = process.env;
 
@@ -14,15 +20,10 @@ const db = new pg.Pool({
   connectionString: DATABASE_URL,
 });
 
-// db.query("SELECT 1")
-//   .then(() => console.log("✅ Postgres connected"))
-//   .catch((err) => console.error("❌ DB error", err));
-
 app.post("/register", async (req, res) => {
   const { email, password } = req.body;
 
   // check if user already exists
-  // Email is already registered to an account.
   try {
     const result = await db.query(
       "SELECT user_id From users WHERE email = $1",
@@ -58,6 +59,7 @@ app.post("/register", async (req, res) => {
 
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
+  console.log("i was hit");
 
   try {
     const result = await db.query(
@@ -72,7 +74,7 @@ app.post("/login", async (req, res) => {
       });
     }
 
-    var validPasssowrd = bcrypt.compare(password, result.rows[0].pword);
+    var validPasssowrd = await bcrypt.compare(password, result.rows[0].pword);
     if (!validPasssowrd) {
       return res.status(400).json({
         error: "INCORRECT_PASSWORD",
@@ -86,6 +88,7 @@ app.post("/login", async (req, res) => {
       message: "Login successful",
     });
   } catch (err) {
+    console.log("something went wrong");
     return res.status(500).json({
       error: err.message,
       message: "Something went wrong",
@@ -93,9 +96,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.use(authenticate);
-
-app.post("/createteam", async (req, res) => {
+app.post("/createteam", authenticate, async (req, res) => {
   // check if team exists
   // insert into teams table
   // set user as owner of team
@@ -128,7 +129,7 @@ app.post("/createteam", async (req, res) => {
   }
 });
 
-app.post("/team/:teamId/tasks", async (req, res) => {
+app.post("/team/:teamId/tasks", authenticate, async (req, res) => {
   const { userId } = req.user;
   const { title, content, assignedTo } = req.body;
   const { teamId } = req.params;
@@ -175,7 +176,7 @@ app.post("/team/:teamId/tasks", async (req, res) => {
 });
 
 // get team: click into team tile, returns team members, tasks,
-app.get("/team/:teamId", async (req, res) => {
+app.get("/team/:teamId", authenticate, async (req, res) => {
   const teamId = req.params.teamId;
 
   // store team members into a list
@@ -194,11 +195,105 @@ app.get("/team/:teamId", async (req, res) => {
   }
 });
 
-app.get("");
+app.get("/team/:teamId/tasks", authenticate, async (req, res) => {
+  const { teamId } = req.params;
+  const { userId } = req.user;
+  // get tasks from database corresponding to teamId
+  try {
+    getTasks = await db.query(
+      `SELECT *
+      FROM tasks
+      WHERE team_id=$1 AND
+      user_id = $2`,
+      [teamId, userId],
+    );
+
+    // do stuff with returned tasks later.
+    return getTasks;
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      error: "SERVER_ERROR",
+      message: "Something went wrong",
+    });
+  }
+});
+
+app.post("/team/:teamId/members", authenticate, async (req, res) => {
+  const { newMember, role } = req.body;
+  const { teamId } = req.params;
+  try {
+    const alreadyMember = await db.query(
+      `SELECT *
+      FROM users_teams 
+      WHERE user_id = $1`,
+      [newMember],
+    );
+
+    if (alreadyMember.rowCount > 0) {
+      return res.status(400).json({
+        error: "DUPLICATE_USER_IN_TEAM",
+        message: "user already in team",
+      });
+    }
+
+    await db.query(
+      `INSERT INTO users_teams (user_id, team_id, team_role)
+      VALUES ($1, $2, $3)`,
+      [newMember, teamId, role],
+    );
+  } catch (err) {
+    return res.status(500).json({
+      error: "SERVER_ERROR",
+      message: "Something went wrong",
+    });
+  }
+});
+
+app.patch("/team/:teamId/tasks/taskId", authenticate, async (req, res) => {
+  const { taskId, title, content, assigned_to, team_status } = req.body;
+  const { teamId } = req.params;
+
+  try {
+    // 1. Ensure task exists and belongs to team
+    const taskCheck = await db.query(
+      `SELECT * FROM tasks WHERE task_id=$1 AND team_id=$2`,
+      [taskId, teamId],
+    );
+
+    if (taskCheck.rows.length === 0) {
+      return res.status(404).json({
+        error: "TASK_NOT_FOUND",
+        message: "Task does not exist in this team",
+      });
+    }
+
+    await db.query(
+      `
+        UPDATE tasks
+          SET title = $1,
+           content = $2,
+           assigned_to = $3,
+           team_status = $4,
+          WHERE task_id = $5
+        `,
+      [title, content, assigned_to, team_status, taskId],
+    );
+
+    return res.status(200).json({
+      message: "task updated",
+    });
+  } catch (err) {
+    return res.status(500).json({
+      error: "SERVER_ERROR",
+      message: "Something went wrong",
+    });
+  }
+});
 
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
-  if (!authHeader.startsWith("Bearer ")) {
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ error: "Invalid token format" });
   }
 

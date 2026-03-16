@@ -25,16 +25,16 @@ FROM users_teams ut
 JOIN teams t ON ut.team_id = t.team_id
 WHERE t.user_id = $1 AND ut.user_id = $1
 
-// Tasks are bucketed in a Team
 CREATE TABLE tasks (
   task_id SERIAL PRIMARY KEY,
-  title TEXT,
-  content TEXT,
   assigned_to INT,
   team_id INT NOT NULL,
+  title TEXT,
+  content TEXT,
   task_status TEXT NOT NULL DEFAULT 'To do'
     CHECK (task_status IN ('To do', 'In progress', 'Complete'))
   FOREIGN KEY (team_id) REFERENCES teams(team_id)
+  FOREIGN KEY (assigned_to) REFERENCES users(user_id)
 )
 
 CREATE TABLE tasks_teams (
