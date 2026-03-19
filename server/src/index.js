@@ -195,21 +195,18 @@ app.get("/team/:teamId", authenticate, async (req, res) => {
   }
 });
 
-app.get("/team/:teamId/tasks", authenticate, async (req, res) => {
-  const { teamId } = req.params;
-  const { userId } = req.user;
+app.get("/tasks", authenticate, async (req, res) => {
+  const { teamId } = req.query;
   // get tasks from database corresponding to teamId
   try {
-    getTasks = await db.query(
+    const getTasks = await db.query(
       `SELECT *
       FROM tasks
-      WHERE team_id=$1 AND
-      user_id = $2`,
-      [teamId, userId],
+      WHERE team_id=$1`,
+      [teamId],
     );
 
-    // do stuff with returned tasks later.
-    return getTasks;
+    res.json(getTasks.rows);
   } catch (err) {
     console.log(err);
     return res.status(500).json({

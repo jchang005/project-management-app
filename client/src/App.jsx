@@ -13,7 +13,7 @@ function App() {
         <Route path="/register" element={<Register />} />
 
         <Route
-          path="/dashboard"
+          path="/dashboard/team/:teamId"
           element={
             <ProtectedRoute>
               <Dashboard />
