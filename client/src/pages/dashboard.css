@@ -1,0 +1,154 @@
+.dashboard-page {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  min-height: 100vh;
+  background: #e2e8f0;
+}
+
+.dashboard-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  justify-content: space-between;
+  padding: 1.5rem;
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+.dashboard-sidebar__title {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.dashboard-sidebar__team {
+  margin: 0.5rem 0 0;
+  color: #cbd5e1;
+}
+
+.dashboard-sidebar button {
+  width: 100%;
+  border: 0;
+  background: #334155;
+  color: #f8fafc;
+}
+
+.dashboard-main {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #0f172a;
+}
+
+.dashboard-header p {
+  margin: 0.25rem 0 0;
+  color: #475569;
+}
+
+.dashboard-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  padding: 1.5rem;
+  align-items: start;
+}
+
+.dashboard-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 320px;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.dashboard-column__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dashboard-column__header h3 {
+  margin: 0;
+  color: #0f172a;
+}
+
+.dashboard-column__header span {
+  min-width: 2rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.dashboard-column__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.dashboard-column__empty {
+  margin: 0;
+  color: #64748b;
+}
+
+.task-card {
+  padding: 0.9rem 1rem;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+}
+
+.task-card__title {
+  margin: 0;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.task-card__content {
+  margin: 0.5rem 0 0;
+  color: #475569;
+}
+
+.dashboard-feedback {
+  margin: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  color: #991b1b;
+}
+
+@media (max-width: 960px) {
+  .dashboard-page {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-sidebar {
+    gap: 1rem;
+  }
+
+  .dashboard-board {
+    grid-template-columns: 1fr;
+  }
+}
