@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import "./auth.css";
 import api from "../api/axios";
 
 export default function Register() {
@@ -27,34 +29,52 @@ export default function Register() {
   };
 
   return (
-    <div>
-      <h2>Register</h2>
-
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+    <div className="login-page">
+      <div className="login-card">
+        <div className="login-card__header">
+          <p className="login-card__eyebrow">Project Management App</p>
+          <h2>Create Account</h2>
+          <p className="login-card__subtitle">
+            Set up your account to start managing your team tasks.
+          </p>
         </div>
 
-        <div>
-          <label>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
+        <form className="login-form" onSubmit={handleSubmit}>
+          <div className="login-form__field">
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              className="login-form__input"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
 
-        <button type="submit">Register</button>
-      </form>
+          <div className="login-form__field">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              className="login-form__input"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
 
-      {message && <p>{message}</p>}
+          <button className="login-form__button" type="submit">
+            Register
+          </button>
+        </form>
+
+        <p className="login-card__footer">
+          Already have an account? <Link to="/login">Login</Link>
+        </p>
+
+        {message ? <p className="login-card__message">{message}</p> : null}
+      </div>
     </div>
   );
 }

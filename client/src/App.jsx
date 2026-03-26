@@ -3,7 +3,6 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { AuthProvider } from "./context/AuthContext";
 
 function App() {
   return (
@@ -13,7 +12,7 @@ function App() {
         <Route path="/register" element={<Register />} />
 
         <Route
-          path="/dashboard/team/:teamId"
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />

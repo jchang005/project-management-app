@@ -131,7 +131,7 @@ app.post("/createteam", authenticate, async (req, res) => {
 
 app.post("/team/:teamId/tasks", authenticate, async (req, res) => {
   const { userId } = req.user;
-  const { title, content, assignedTo } = req.body;
+  const { title, content, assignedTo, taskStatus } = req.body;
   const { teamId } = req.params;
 
   try {
@@ -160,9 +160,9 @@ app.post("/team/:teamId/tasks", authenticate, async (req, res) => {
     }
 
     await db.query(
-      `INSERT INTO tasks (title, content, assigned_to, team_id) 
-      VALUES ($1, $2, $3, $4)`,
-      [title, content, assignedTo, teamId],
+      `INSERT INTO tasks (title, content, assigned_to, team_id, task_status) 
+      VALUES ($1, $2, $3, $4, $5)`,
+      [title, content, assignedTo, teamId, taskStatus],
     );
 
     return res.status(200).json({ message: "Task created" });
@@ -207,6 +207,67 @@ app.get("/tasks", authenticate, async (req, res) => {
     );
 
     res.json(getTasks.rows);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      error: "SERVER_ERROR",
+      message: "Something went wrong",
+    });
+  }
+});
+
+app.get("/team/:teamId/members", authenticate, async (req, res) => {
+  const { userId } = req.user;
+  const { teamId } = req.params;
+
+  try {
+    const membershipCheck = await db.query(
+      `SELECT team_role
+      FROM users_teams
+      WHERE user_id = $1 AND team_id = $2`,
+      [userId, teamId],
+    );
+
+    if (membershipCheck.rows.length === 0) {
+      return res.status(403).json({
+        error: "NOT_A_MEMBER",
+        message: "You are not part of this team",
+      });
+    }
+
+    const membersResult = await db.query(
+      `SELECT users.user_id, users.email, users_teams.team_role
+      FROM users_teams
+      INNER JOIN users ON users.user_id = users_teams.user_id
+      WHERE users_teams.team_id = $1
+      ORDER BY users.email ASC`,
+      [teamId],
+    );
+
+    return res.status(200).json(membersResult.rows);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      error: "SERVER_ERROR",
+      message: "Something went wrong",
+    });
+  }
+});
+
+app.get("/teams", authenticate, async (req, res) => {
+  const { userId } = req.user;
+
+  try {
+    const teamsResult = await db.query(
+      `SELECT teams.team_id, teams.team_name, users_teams.team_role
+      FROM users_teams
+      INNER JOIN teams ON teams.team_id = users_teams.team_id
+      WHERE users_teams.user_id = $1
+      ORDER BY teams.team_name ASC`,
+      [userId],
+    );
+
+    return res.status(200).json(teamsResult.rows);
   } catch (err) {
     console.log(err);
     return res.status(500).json({
