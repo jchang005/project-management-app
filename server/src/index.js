@@ -10,14 +10,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    credentials: true,
   }),
 );
 
-const { DATABASE_URL, JWT_SECRET, PORT } = process.env;
+const { JWT_SECRET } = process.env;
+
+const PORT = process.env.PORT || 4000;
 
 const db = new pg.Pool({
-  connectionString: DATABASE_URL,
+  connectionString: process.env.DATABASE_URL,
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? { rejectUnauthorized: false }
+      : false,
 });
 
 app.post("/register", async (req, res) => {
@@ -346,6 +353,16 @@ app.patch("/team/:teamId/tasks/taskId", authenticate, async (req, res) => {
       error: "SERVER_ERROR",
       message: "Something went wrong",
     });
+  }
+});
+
+app.get("/test-db", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW()");
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("DB error");
   }
 });
 
