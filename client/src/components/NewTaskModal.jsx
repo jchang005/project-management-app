@@ -15,14 +15,8 @@ export default function NewTaskModal({
   }
 
   return (
-    <div className="modal-backdrop" role="presentation" onClick={onClose}>
-      <div
-        className="task-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="new-task-title"
-        onClick={(event) => event.stopPropagation()}
-      >
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="task-modal" onClick={(event) => event.stopPropagation()}>
         <div className="task-modal__header">
           <div>
             <p className="task-modal__eyebrow">New Task</p>
@@ -102,10 +96,18 @@ export default function NewTaskModal({
           ) : null}
 
           <div className="task-modal__actions">
-            <button type="button" className="task-modal__secondary" onClick={onClose}>
+            <button
+              type="button"
+              className="task-modal__secondary"
+              onClick={onClose}
+            >
               Cancel
             </button>
-            <button type="submit" className="task-modal__primary" disabled={isSubmitting}>
+            <button
+              type="submit"
+              className="task-modal__primary"
+              disabled={isSubmitting}
+            >
               {isSubmitting ? "Creating..." : "Create Task"}
             </button>
           </div>

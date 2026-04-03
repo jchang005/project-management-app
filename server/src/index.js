@@ -358,8 +358,11 @@ app.patch("/team/:teamId/tasks/taskId", authenticate, async (req, res) => {
 
 app.get("/test-db", async (req, res) => {
   try {
-    const result = await pool.query("SELECT NOW()");
-    res.json(result.rows);
+    const result = await db.query("SELECT NOW()");
+    res.json({
+      databaseUrl: process.env.DATABASE_URL,
+      connectedAt: result.rows[0].now,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send("DB error");
