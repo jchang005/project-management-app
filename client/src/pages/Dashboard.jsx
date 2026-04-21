@@ -144,14 +144,14 @@ export default function Dashboard() {
 
     setTasks((current) =>
       current.map((t) =>
-        t.task_id === taskId ? { ...t, task_status: "complete" } : t,
+        t.task_id === taskId ? { ...t, task_status: "Complete" } : t,
       ),
     );
 
     try {
       await api.patch(
         `/team/${selectedTeam.team_id}/tasks/${taskId}/status`,
-        { taskStatus: "complete" },
+        { taskStatus: "Complete" },
       );
     } catch (err) {
       console.log("Error completing task", err);
