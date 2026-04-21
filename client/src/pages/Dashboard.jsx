@@ -139,6 +139,26 @@ export default function Dashboard() {
     }));
   }
 
+  async function handleCompleteTask(taskId) {
+    if (!selectedTeam) return;
+
+    setTasks((current) =>
+      current.map((t) =>
+        t.task_id === taskId ? { ...t, task_status: "complete" } : t,
+      ),
+    );
+
+    try {
+      await api.patch(
+        `/team/${selectedTeam.team_id}/tasks/${taskId}/status`,
+        { taskStatus: "complete" },
+      );
+    } catch (err) {
+      console.log("Error completing task", err);
+      fetchTasks(selectedTeam.team_id);
+    }
+  }
+
   async function handleCreateTask(event) {
     event.preventDefault();
 
@@ -277,6 +297,11 @@ export default function Dashboard() {
                     title={column.title}
                     tasks={columnTasks}
                     emptyMessage={column.emptyMessage}
+                    onComplete={
+                      column.status !== "complete"
+                        ? handleCompleteTask
+                        : undefined
+                    }
                   />
                 );
               })}

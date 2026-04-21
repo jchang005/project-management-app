@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
 import "./auth.css";
 
@@ -13,6 +13,8 @@ export default function Login() {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const successMessage = location.state?.successMessage;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -80,6 +82,11 @@ export default function Login() {
           Don't have an account? <Link to="/register">Register</Link>
         </p>
 
+        {successMessage ? (
+          <p className="login-card__message login-card__message--success">
+            {successMessage}
+          </p>
+        ) : null}
         {message ? <p className="login-card__message">{message}</p> : null}
       </div>
     </div>

@@ -370,6 +370,39 @@ app.patch("/team/:teamId/tasks/taskId", authenticate, async (req, res) => {
   }
 });
 
+app.patch("/team/:teamId/tasks/:taskId/status", authenticate, async (req, res) => {
+  const { userId } = req.user;
+  const { teamId, taskId } = req.params;
+  const { taskStatus } = req.body;
+
+  try {
+    const memberCheck = await db.query(
+      `SELECT team_role FROM users_teams WHERE user_id = $1 AND team_id = $2`,
+      [userId, teamId],
+    );
+
+    if (memberCheck.rows.length === 0) {
+      return res.status(403).json({
+        error: "NOT_A_MEMBER",
+        message: "You are not part of this team",
+      });
+    }
+
+    await db.query(
+      `UPDATE tasks SET task_status = $1 WHERE task_id = $2 AND team_id = $3`,
+      [taskStatus, taskId, teamId],
+    );
+
+    return res.status(200).json({ message: "Task status updated" });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      error: "SERVER_ERROR",
+      message: "Something went wrong",
+    });
+  }
+});
+
 app.get("/test-db", async (req, res) => {
   try {
     const result = await db.query("SELECT NOW()");

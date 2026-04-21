@@ -8,7 +8,7 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
 
@@ -16,17 +16,17 @@ export default function Register() {
     e.preventDefault();
 
     try {
-      const response = await api.post("/register", {
+      await api.post("/register", {
         email,
         username,
         password,
       });
 
-      setMessage(response.data.message);
-
-      navigate("/login");
+      navigate("/login", {
+        state: { successMessage: "Account created! Please log in." },
+      });
     } catch (err) {
-      setMessage(err.response?.data?.message || "Registration failed");
+      setError(err.response?.data?.message || "Registration failed");
     }
   };
 
@@ -87,7 +87,7 @@ export default function Register() {
           Already have an account? <Link to="/login">Login</Link>
         </p>
 
-        {message ? <p className="login-card__message">{message}</p> : null}
+        {error ? <p className="login-card__message">{error}</p> : null}
       </div>
     </div>
   );

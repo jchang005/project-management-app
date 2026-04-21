@@ -103,6 +103,11 @@
   text-align: center;
 }
 
+.login-card__message--success {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
 @media (max-width: 480px) {
   .login-page {
     padding: 16px;
