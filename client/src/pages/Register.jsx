@@ -6,6 +6,7 @@ import api from "../api/axios";
 
 export default function Register() {
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
@@ -17,6 +18,7 @@ export default function Register() {
     try {
       const response = await api.post("/register", {
         email,
+        username,
         password,
       });
 
@@ -48,6 +50,18 @@ export default function Register() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="login-form__field">
+            <label htmlFor="username">Username</label>
+            <input
+              id="username"
+              className="login-form__input"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
             />
           </div>

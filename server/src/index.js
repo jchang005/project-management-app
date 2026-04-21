@@ -28,36 +28,50 @@ const db = new pg.Pool({
 });
 
 app.post("/register", async (req, res) => {
-  const { email, password } = req.body;
+  const { email, username, password } = req.body;
 
-  // check if user already exists
   try {
-    const result = await db.query(
-      "SELECT user_id From users WHERE email = $1",
-      [email],
+    const existing = await db.query(
+      "SELECT user_id FROM users WHERE email = $1 OR username = $2",
+      [email, username],
     );
-    console.log(result);
-    if (result.rows.length >= 1) {
-      // user exists
+    if (existing.rows.length >= 1) {
       return res.status(409).json({
         error: "USER_ALREADY_EXISTS",
-        message: "Email is already registered to another account",
+        message: "Email or username is already taken",
       });
-    } else {
-      // Hash password
-      const hash = await bcrypt.hash(password, 10);
-      try {
-        await db.query("INSERT INTO users (email, pword) VALUES ($1, $2)", [
-          email,
-          hash,
-        ]);
-      } catch (err) {
-        console.log(err);
-        return res.status(500).json("Server Error: Could not register user.");
-      }
-      res.status(201).json({ message: "User created" });
-      console.log("user created");
     }
+
+    const hash = await bcrypt.hash(password, 10);
+    const client = await db.connect();
+    try {
+      await client.query("BEGIN");
+      const userResult = await client.query(
+        "INSERT INTO users (email, username, pword) VALUES ($1, $2, $3) RETURNING user_id",
+        [email, username, hash],
+      );
+      const userId = userResult.rows[0].user_id;
+      const teamName = `${username}'s team`;
+      const teamResult = await client.query(
+        "INSERT INTO teams (team_name, team_owner) VALUES ($1, $2) RETURNING team_id",
+        [teamName, userId],
+      );
+      const teamId = teamResult.rows[0].team_id;
+      await client.query(
+        "INSERT INTO users_teams (user_id, team_id, team_role) VALUES ($1, $2, $3)",
+        [userId, teamId, "OWNER"],
+      );
+      await client.query("COMMIT");
+    } catch (err) {
+      await client.query("ROLLBACK");
+      console.log(err);
+      return res.status(500).json("Server Error: Could not register user.");
+    } finally {
+      client.release();
+    }
+
+    res.status(201).json({ message: "User created" });
+    console.log("user created");
   } catch (err) {
     console.log(err);
     return res.status(500).json("Server Error");

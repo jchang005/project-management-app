@@ -8,6 +8,7 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE users (
   user_id SERIAL PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
+  username TEXT UNIQUE NOT NULL,
   pword TEXT NOT NULL
 );
 
